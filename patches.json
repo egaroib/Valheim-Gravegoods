@@ -1,0 +1,17 @@
+{
+  "mod": "Gravegoods",
+  "targets": [
+    {
+      "type": "Container",
+      "method": "AddDefaultItems"
+    },
+    {
+      "type": "Container",
+      "method": "RPC_RequestOpen"
+    },
+    {
+      "type": "ZNet",
+      "method": "Awake"
+    }
+  ]
+}

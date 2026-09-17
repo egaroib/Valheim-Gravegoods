@@ -1,0 +1,7 @@
+# Changelog
+
+## 0.1.0
+- Added a small chance for world chests to hold biome resources, arrows or bolts, and gear
+- Added tiering of gear and ammo from crafting materials, including other mods' items
+- Added loot.txt, report.md, and the gravegoods status, sim, report and legacy commands
+- Added compatibility with RegeneratingWorld and MultiUserChest
