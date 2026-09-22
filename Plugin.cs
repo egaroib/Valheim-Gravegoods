@@ -28,7 +28,7 @@ namespace Gravegoods
     {
         public const string PluginGuid = "com.ragemedia.gravegoods";
         public const string PluginName = "Gravegoods";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.1.1";
 
         internal static GravegoodsPlugin Instance;
 
