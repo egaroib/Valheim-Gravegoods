@@ -140,7 +140,9 @@ namespace Gravegoods.Loot
             // the first fill. Our additions are not a player's, so undo that flag if it was
             // clear before we started.
             var depositBefore = RegeneratingWorldCompat.ReadDeposit(zdo);
-            var cheated = zdo.GetBool(ZDOVars.s_cheated) && !PlayerProfile.s_bypassCheatChecks;
+            // IsCheated, not GetBool: since 1.0.20 the flag is a revision number and the
+            // game ignores pre-revision values, which GetBool would still read as cheated.
+            var cheated = zdo.IsCheated() && !PlayerProfile.s_bypassCheatChecks;
             var inventory = container.GetInventory();
             var added = new List<string>();
 

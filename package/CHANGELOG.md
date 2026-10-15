@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.2
+- Fixed bonus loot being marked as cheated in chests Valheim 1.0.20 no longer treats as cheated
+
 ## 0.1.1
 - Changed the required Jotunn version to 2.30.2, matching servers on the latest Jotunn
 
