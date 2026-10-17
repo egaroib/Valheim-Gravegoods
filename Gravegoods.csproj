@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Gravegoods</AssemblyName>
     <RootNamespace>Gravegoods</RootNamespace>
-    <Version>0.1.2</Version>
+    <Version>0.2.0</Version>
     <Description>World chests get a small chance of biome-appropriate resources, ammo, and gear.</Description>
     <Authors>RAGEmedia</Authors>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

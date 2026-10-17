@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+- Changed Ashlands and Deep North elemental weapon variants to drop from a separate, much rarer pool (5% of gear drops by default, always quality 1)
+- Added the [enhancers] section to loot.txt and the Gear.EnhancedChance setting
+- Added DeepNorth as a valid biome in the gravegoods sim usage text
+
 ## 0.1.2
 - Fixed bonus loot being marked as cheated in chests Valheim 1.0.20 no longer treats as cheated
 

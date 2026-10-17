@@ -71,7 +71,8 @@ namespace Gravegoods.Commands
             context.AddString($"Loot tables: {LootTables.SourceDescription}");
             context.AddString(
                 $"Chances per chest: resource {GravegoodsConfig.ResourceChance.Value:P0}, " +
-                $"ammo {GravegoodsConfig.AmmoChance.Value:P0}, gear {GravegoodsConfig.GearChance.Value:P0}");
+                $"ammo {GravegoodsConfig.AmmoChance.Value:P0}, gear {GravegoodsConfig.GearChance.Value:P0} " +
+                $"({GravegoodsConfig.GearEnhancedChance.Value:P0} of gear from enhanced pools)");
             context.AddString($"Legacy rolls for old chests: {(ChestLoot.LegacyEnabled ? "ON" : "off")}");
 
             var pools = LootTables.IsReady ? LootPools.Get() : null;
@@ -85,7 +86,8 @@ namespace Gravegoods.Commands
             {
                 context.AddString(
                     $"  {(Tier)t,-12} resources {LootTables.Current.Resources[t].Count,3}, " +
-                    $"ammo {pools.Ammo[t].Count,3}, gear {pools.Gear[t].Count,3}");
+                    $"ammo {pools.Ammo[t].Count,3}, gear {pools.Gear[t].Count,3}" +
+                    (pools.GearEnhanced[t].Count > 0 ? $" + {pools.GearEnhanced[t].Count} enhanced" : ""));
             }
             if (pools.MissingNames.Count > 0)
             {
@@ -97,7 +99,7 @@ namespace Gravegoods.Commands
         {
             if (args.Length < 2 || !Tiers.TryParse(args[1], out var tier))
             {
-                context.AddString("usage: gravegoods sim <Meadows|BlackForest|Swamp|Mountain|Plains|Mistlands|Ashlands> [chests]");
+                context.AddString("usage: gravegoods sim <Meadows|BlackForest|Swamp|Mountain|Plains|Mistlands|Ashlands|DeepNorth> [chests]");
                 return;
             }
             if (!LootTables.IsReady || LootPools.Get() == null)
@@ -114,6 +116,7 @@ namespace Gravegoods.Commands
             }
 
             var hits = 0;
+            var enhanced = 0;
             var tally = new Dictionary<string, int>(StringComparer.Ordinal);
             var misses = new HashSet<string>();
             for (var i = 0; i < count; i++)
@@ -122,6 +125,7 @@ namespace Gravegoods.Commands
                 if (result.Items.Count > 0) hits++;
                 foreach (var note in result.Notes)
                 {
+                    if (note.EndsWith(", enhanced)")) enhanced++;
                     // Collapse stack sizes and durability so identical items group together.
                     var key = string.Join(" ", note.Split(' ').Take(3).ToArray());
                     key = key.StartsWith("gear") ? key : string.Join(" ", note.Split(' ').Take(2).ToArray());
@@ -141,6 +145,7 @@ namespace Gravegoods.Commands
                 }
                 if (rows.Count > 12) context.AddString($"    ... and {rows.Count - 12} more");
             }
+            context.AddString($"  enhanced gear: {enhanced}");
             foreach (var miss in misses) context.AddString($"  miss: {miss}");
         }
 

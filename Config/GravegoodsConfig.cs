@@ -30,6 +30,7 @@ namespace Gravegoods.Config
         internal static ConfigEntry<float> GearQuality3Chance;
         internal static ConfigEntry<float> GearDurabilityMin;
         internal static ConfigEntry<float> GearDurabilityMax;
+        internal static ConfigEntry<float> GearEnhancedChance;
 
         internal static ConfigEntry<float> AmmoSameTierChance;
         internal static ConfigEntry<int> AmmoStackMin;
@@ -105,6 +106,17 @@ namespace Gravegoods.Config
                     "Highest durability found gear can have, as a fraction of max. Set equal to " +
                     "DurabilityMin for a fixed value. Capped at 0.30.",
                     new AcceptableValueRange<float>(0f, 0.30f), admin));
+
+            // Elemental variants are a base weapon plus a gem or orb the player has not earned
+            // yet, so they are a jackpot rather than a stopgap. Capped well below the point where
+            // a chest would hand out variants as often as the weapons they are made from.
+            GearEnhancedChance = config.Bind("Gear", "EnhancedChance", 0.05f,
+                new ConfigDescription(
+                    "When gear drops from a rung that has elemental variants (Ashlands, Deep North), " +
+                    "the chance it is one of those instead of base gear. Variants are the items that " +
+                    "need an [enhancers] gem or orb in loot.txt. They always arrive at quality 1. " +
+                    "0 means they never drop. Capped at 0.25.",
+                    new AcceptableValueRange<float>(0f, 0.25f), admin));
 
             AmmoSameTierChance = config.Bind("Ammo", "SameTierChance", 0.70f,
                 new ConfigDescription(

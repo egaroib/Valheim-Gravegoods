@@ -43,6 +43,16 @@ namespace Gravegoods.Diagnostics
             sb.AppendLine($"Loot tables: {LootTables.SourceDescription}  ");
             sb.AppendLine($"{pools.ItemCount} item prefabs in ObjectDB.");
             sb.AppendLine();
+            sb.AppendLine("Enhanced gear needs one of: " +
+                          (file.Enhancers.Count == 0
+                              ? "_nothing (no [enhancers] listed, so variants drop as plain gear)_"
+                              : string.Join(", ", file.Enhancers.OrderBy(n => n, StringComparer.Ordinal)
+                                  .Select(n => $"`{n}`").ToArray())) +
+                          (file.EnhancersFromDefault
+                              ? ". loot.txt has no [enhancers] section, so this is the built-in list; " +
+                                "add the section to change it."
+                              : "."));
+            sb.AppendLine();
 
             if (file.Warnings.Count > 0 || pools.MissingNames.Count > 0)
             {
@@ -82,6 +92,7 @@ namespace Gravegoods.Diagnostics
 
                 AppendPool(sb, "Ammo", pools.Ammo[t]);
                 AppendPool(sb, "Gear", pools.Gear[t]);
+                if (pools.GearEnhanced[t].Count > 0) AppendPool(sb, "Enhanced gear", pools.GearEnhanced[t]);
             }
 
             sb.AppendLine("## Left out of the pools");
@@ -133,11 +144,13 @@ namespace Gravegoods.Diagnostics
             }
             else
             {
-                sb.AppendLine("| Prefab | Name | Placed by |");
-                sb.AppendLine("|---|---|---|");
+                var enhanced = items.Any(i => i.Enhancer != null);
+                sb.AppendLine(enhanced ? "| Prefab | Name | Placed by | Enhanced by |" : "| Prefab | Name | Placed by |");
+                sb.AppendLine(enhanced ? "|---|---|---|---|" : "|---|---|---|");
                 foreach (var item in items)
                 {
-                    sb.AppendLine($"| `{item.Prefab}` | {DisplayName(item)} | {item.Because} |");
+                    sb.AppendLine($"| `{item.Prefab}` | {DisplayName(item)} | {item.Because} |" +
+                                  (enhanced ? $" {item.Enhancer} |" : ""));
                 }
             }
             sb.AppendLine();

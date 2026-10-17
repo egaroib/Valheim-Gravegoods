@@ -116,10 +116,16 @@ namespace Gravegoods.Loot
                 return;
             }
 
+            // Elemental variants live in their own pool at the same rung, drawn from only rarely.
+            var enhancedPool = pools.GearEnhanced[(int)actual];
+            var enhanced = enhancedPool.Count > 0 && Random.value < GravegoodsConfig.GearEnhancedChance.Value;
+            if (enhanced) pool = enhancedPool;
+
             // Upgrades are the reward for finding older gear, so the chest's own rung
             // never comes pre-upgraded: that would put it past what the biome can craft.
+            // Variants never do either; finding one at all is the reward.
             var quality = 1;
-            if (!sameTier)
+            if (!sameTier && !enhanced)
             {
                 var q = Random.value;
                 if (q < GravegoodsConfig.GearQuality3Chance.Value) quality = 3;
@@ -134,7 +140,7 @@ namespace Gravegoods.Loot
             result.Notes.Add(
                 $"gear {pick.Prefab} q{item.m_quality} " +
                 $"{Mathf.RoundToInt(item.m_durability / Mathf.Max(1f, item.GetMaxDurability()) * 100f)}% " +
-                $"(rung {actual}{(sameTier ? ", same as chest" : "")})");
+                $"(rung {actual}{(sameTier ? ", same as chest" : "")}{(enhanced ? ", enhanced" : "")})");
         }
 
         /// <summary>

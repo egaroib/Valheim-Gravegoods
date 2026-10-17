@@ -35,6 +35,15 @@ namespace Gravegoods.Loot
         /// <summary>Items forced into a rung, bypassing recipe classification entirely.</summary>
         internal readonly Dictionary<string, Tier> Overrides = new Dictionary<string, Tier>(StringComparer.Ordinal);
 
+        /// <summary>
+        /// Gems and orbs that turn a base weapon into an elemental variant. Gear that cannot be
+        /// crafted without one goes to the separate, much rarer enhanced pool.
+        /// </summary>
+        internal readonly HashSet<string> Enhancers = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>True when the file had no [enhancers] section and the shipped list was used.</summary>
+        internal bool EnhancersFromDefault;
+
         internal readonly List<ResourceEntry>[] Resources = NewTierLists();
 
         internal readonly List<string> Warnings = new List<string>();
@@ -56,6 +65,7 @@ namespace Gravegoods.Loot
             }
 
             var section = "";
+            var sawEnhancers = false;
             var resourceTier = Tier.Meadows;
             var lines = text.Replace("\r", "").Split('\n');
 
@@ -68,6 +78,7 @@ namespace Gravegoods.Loot
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
                     section = line.Substring(1, line.Length - 2).Trim().ToLowerInvariant();
+                    if (section == "enhancers") sawEnhancers = true;
                     if (section.StartsWith("resources"))
                     {
                         var tierName = section.Substring("resources".Length).Trim();
@@ -95,6 +106,9 @@ namespace Gravegoods.Loot
                     case "never":
                         foreach (var name in SplitNames(line)) file.Never.Add(name);
                         break;
+                    case "enhancers":
+                        foreach (var name in SplitNames(line)) file.Enhancers.Add(name);
+                        break;
                     case "overrides":
                         ParseOverride(file, line, where);
                         break;
@@ -107,6 +121,16 @@ namespace Gravegoods.Loot
                         file.Warnings.Add($"{where}: line outside any known section, ignored.");
                         break;
                 }
+            }
+
+            // loot.txt is never rewritten once it exists, so files from before 0.2.0 lack this
+            // section. Without it every elemental variant would sit in the plain pool, which is
+            // the problem the section exists to fix, so fall back to the shipped list. An empty
+            // [enhancers] section is respected: that is an admin opting out on purpose.
+            if (!sawEnhancers && !ReferenceEquals(text, DefaultLootFile.Text))
+            {
+                file.Enhancers.UnionWith(Parse(DefaultLootFile.Text).Enhancers);
+                file.EnhancersFromDefault = true;
             }
 
             return file;

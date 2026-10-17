@@ -83,7 +83,7 @@ DeepNorth: MoldArmorMageHelmet, MoldArmorMageChest, MoldArmorMageLegs
 # high only makes an item rarer, a rung too low hands it out early. Move them down once known.
 Plains: TrophyBjornUndead, UndeadBjornRibcage, WrithanRoots
 Mistlands: GiantBloodSack
-DeepNorth: Ice, BarkaBranch
+DeepNorth: Ice, BarkaBranch, OrbFrostFire, OrbThunderBlood
 
 
 # ---------------------------------------------------------------------------------------
@@ -110,6 +110,21 @@ DyrnwynHiltFragment, CrownJewel
 [never]
 # Novelty and tool items that happen to use a weapon or armor slot.
 Tankard, Tankard_dvergr, GrapplingHook, Scythe, Shovel, HelmetFishingHat, AxeEarly
+
+
+# ---------------------------------------------------------------------------------------
+# [enhancers]
+# Gems and orbs that turn a base weapon into an elemental variant (Storm Fang, Bloodgeon,
+# Bloodgold _FrostFire, ValheimArmory's blood/lightning/primal gear, ...). Gear that cannot
+# be crafted without one of these goes into a separate enhanced pool, and only
+# Gear.EnhancedChance of gear drops come from it. Enhanced gear is always quality 1.
+# The base weapons stay in the normal pool. Leave this section empty to turn the split off.
+# ---------------------------------------------------------------------------------------
+[enhancers]
+# Ashlands: Bloodstone, Iolite, Jade.
+GemstoneRed, GemstoneBlue, GemstoneGreen
+# Deep North.
+OrbFrostFire, OrbThunderBlood
 
 
 # ---------------------------------------------------------------------------------------

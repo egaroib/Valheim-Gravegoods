@@ -20,6 +20,12 @@ Each world chest rolls three independent chances, once, the first time it loads.
 
 Gear comes from **one tier behind** the chest's biome 85% of the time. That older gear can arrive upgraded: 17% quality 2, 3% quality 3. The other 15% of the time it comes from the chest's own tier, always at quality 1. Meadows chests always use Meadows gear.
 
+### Elemental variants are much rarer
+
+Ashlands and Deep North weapons come in elemental variants, made by adding a gem or orb to the base weapon: Storm Fang and Blood Fang from Ash Fang, Bloodgold weapons' Blood-Lightning and Frost-Fire versions, ValheimArmory's blood, lightning and primal gear. The base weapons drop like any other gear. The variants sit in a separate **enhanced** pool, and only 5% of gear drops from those rungs come from it. Enhanced gear always arrives at quality 1.
+
+With default settings that works out to about one variant per 6,700 Ashlands chests, and one Ashlands variant per 1,200 Deep North chests.
+
 Found gear is badly worn on purpose. Its durability is random anywhere between 5% and 30%, so a lucky find helps you push on but needs a trip home to the workbench before it can carry a whole expedition.
 
 Tiers run Meadows, Black Forest, Swamp, Mountain, Plains, Mistlands, Ashlands, Deep North. The biome is read from the chest's map position, so dungeon chests count too. Ocean chests get nothing.
@@ -39,6 +45,7 @@ Anything that needs a **boss trophy or boss drop** is left out: antler, Elder, B
 - which tier each crafting material belongs to
 - the boss materials list
 - a `[never]` list
+- `[enhancers]`, the gems and orbs that make an item an elemental variant
 - `[overrides]` to force an item into a tier
 - the resource list for each biome
 
@@ -61,7 +68,7 @@ In the F5 console as `gravegoods`, or in chat as `/gravegoods`:
 
 - **General:** `Enabled`, `ExcludedContainers` (prefab name fragments to skip; More World Locations' shipment ports by default), `VerboseLogging`
 - **Chances:** `ResourceChance` (max 75%), `AmmoChance` (max 45%), `GearChance` (max 35%). The caps are deliberate: this is an exploration mod, so no setting makes a chest a guaranteed payout.
-- **Gear:** `SameTierChance` (max 20%), `Quality2Chance` (max 25%), `Quality3Chance` (max 15%), `DurabilityMin` and `DurabilityMax` (both 0–30%; 0 means the item arrives broken)
+- **Gear:** `SameTierChance` (max 20%), `Quality2Chance` (max 25%), `Quality3Chance` (max 15%), `DurabilityMin` and `DurabilityMax` (both 0–30%; 0 means the item arrives broken), `EnhancedChance` (max 25%; 0 means elemental variants never drop)
 - **Ammo:** `SameTierChance` (max 75%), `StackMin` (1–3), `StackMax` (5–15)
 
 ## Compatibility

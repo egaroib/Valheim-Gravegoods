@@ -21,6 +21,9 @@ namespace Gravegoods.Loot
 
         /// <summary>Why it landed at this rung, for the report: "Iron (Swamp)".</summary>
         internal string Because;
+
+        /// <summary>The [enhancers] material it cannot be made without, or null for plain gear.</summary>
+        internal string Enhancer;
     }
 
     internal sealed class Exclusion
@@ -38,6 +41,12 @@ namespace Gravegoods.Loot
     internal sealed class LootPools
     {
         internal readonly List<PoolItem>[] Gear = NewLists();
+
+        /// <summary>
+        /// Elemental variants, kept apart from <see cref="Gear"/> so they can be far rarer than
+        /// the base weapon they are made from. Indexed by the same rung.
+        /// </summary>
+        internal readonly List<PoolItem>[] GearEnhanced = NewLists();
         internal readonly List<PoolItem>[] Ammo = NewLists();
         internal readonly List<Exclusion> Excluded = new List<Exclusion>();
 
@@ -102,6 +111,7 @@ namespace Gravegoods.Loot
 
                 GravegoodsPlugin.LogInfo(
                     "Built loot pools. Gear per rung: " + Summary(_cached.Gear) +
+                    ". Enhanced gear per rung: " + Summary(_cached.GearEnhanced) +
                     ". Ammo per rung: " + Summary(_cached.Ammo) + ".");
                 if (_cached.MissingNames.Count > 0)
                 {
@@ -215,7 +225,15 @@ namespace Gravegoods.Loot
                 }
 
                 var entry = new PoolItem { Prefab = name, Go = go, Tier = tier, Kind = kind, Because = because };
-                (kind == PoolKind.Gear ? pools.Gear : pools.Ammo)[(int)tier].Add(entry);
+                if (kind == PoolKind.Ammo)
+                {
+                    pools.Ammo[(int)tier].Add(entry);
+                }
+                else
+                {
+                    entry.Enhancer = classifier.Enhancer(name);
+                    (entry.Enhancer != null ? pools.GearEnhanced : pools.Gear)[(int)tier].Add(entry);
+                }
             }
 
             foreach (var name in classifier.Unknown) pools.UnknownMaterials.Add(name);
@@ -224,13 +242,14 @@ namespace Gravegoods.Loot
             // too, but only when nothing in the install could ever reference them is that
             // worth flagging, so they are reported alongside rather than as errors.
             foreach (var name in file.Materials.Keys.Concat(file.BossMaterials).Concat(file.Never)
+                         .Concat(file.Enhancers)
                          .Concat(file.Overrides.Keys)
                          .Concat(file.Resources.SelectMany(r => r).Select(r => r.Prefab)))
             {
                 if (db.GetItemPrefab(name) == null) pools.MissingNames.Add(name);
             }
 
-            foreach (var list in pools.Gear.Concat(pools.Ammo))
+            foreach (var list in pools.Gear.Concat(pools.GearEnhanced).Concat(pools.Ammo))
             {
                 list.Sort((a, b) => string.CompareOrdinal(a.Prefab, b.Prefab));
             }
@@ -259,6 +278,8 @@ namespace Gravegoods.Loot
             private readonly Dictionary<string, string> _gateMemo = new Dictionary<string, string>(StringComparer.Ordinal);
             private readonly HashSet<string> _visiting = new HashSet<string>(StringComparer.Ordinal);
             private readonly HashSet<string> _gateVisiting = new HashSet<string>(StringComparer.Ordinal);
+            private readonly Dictionary<string, string> _enhancerMemo = new Dictionary<string, string>(StringComparer.Ordinal);
+            private readonly HashSet<string> _enhancerVisiting = new HashSet<string>(StringComparer.Ordinal);
             internal readonly HashSet<string> Unknown = new HashSet<string>(StringComparer.Ordinal);
 
             private sealed class Resolution
@@ -292,16 +313,31 @@ namespace Gravegoods.Loot
             /// only if every one of its recipes is: one boss-free recipe is enough to craft
             /// it through normal progression.
             /// </summary>
-            internal string BossGate(string name)
+            internal string BossGate(string name) =>
+                Gate(name, _file.BossMaterials, _gateMemo, _gateVisiting, BossGate, skipBossRecipes: false);
+
+            /// <summary>
+            /// The [enhancers] gem or orb an item cannot be made without, or null. Same rule as
+            /// <see cref="BossGate"/>: one recipe without an enhancer makes it plain gear. Only
+            /// boss-free recipes count, matching how <see cref="TryResolve"/> picks the rung.
+            /// Walking through crafted ingredients means a variant made from another variant is
+            /// enhanced too, while a variant's base weapon is not.
+            /// </summary>
+            internal string Enhancer(string name) =>
+                Gate(name, _file.Enhancers, _enhancerMemo, _enhancerVisiting, Enhancer, skipBossRecipes: true);
+
+            private string Gate(string name, HashSet<string> materials, Dictionary<string, string> memo,
+                                HashSet<string> visiting, Func<string, string> recurse, bool skipBossRecipes)
             {
-                if (_file.BossMaterials.Contains(name)) return name;
-                if (_gateMemo.TryGetValue(name, out var memo)) return memo;
-                if (!_recipes.TryGetValue(name, out var recipes) || !_gateVisiting.Add(name)) return null;
+                if (materials.Contains(name)) return name;
+                if (memo.TryGetValue(name, out var cached)) return cached;
+                if (!_recipes.TryGetValue(name, out var recipes) || !visiting.Add(name)) return null;
 
                 string gate = null;
                 foreach (var recipe in recipes)
                 {
-                    var recipeGate = RecipeGate(recipe);
+                    if (skipBossRecipes && RecipeGate(recipe, BossGate) != null) continue;
+                    var recipeGate = RecipeGate(recipe, recurse);
                     if (recipeGate == null)
                     {
                         gate = null;
@@ -310,8 +346,8 @@ namespace Gravegoods.Loot
                     gate = gate ?? recipeGate;
                 }
 
-                _gateVisiting.Remove(name);
-                _gateMemo[name] = gate;
+                visiting.Remove(name);
+                memo[name] = gate;
                 return gate;
             }
 
@@ -325,12 +361,12 @@ namespace Gravegoods.Loot
             private static bool NeededToCraft(Piece.Requirement req) =>
                 req?.m_resItem != null && !req.m_upgraderResource && req.m_amount > 0;
 
-            private string RecipeGate(Recipe recipe)
+            private static string RecipeGate(Recipe recipe, Func<string, string> gateOf)
             {
                 foreach (var req in recipe.m_resources)
                 {
                     if (!NeededToCraft(req)) continue;
-                    var gate = BossGate(req.m_resItem.gameObject.name);
+                    var gate = gateOf(req.m_resItem.gameObject.name);
                     if (gate != null) return gate;
                 }
                 return null;
@@ -365,7 +401,7 @@ namespace Gravegoods.Loot
                 string blocker = null;
                 foreach (var recipe in recipes)
                 {
-                    if (RecipeGate(recipe) != null) continue;
+                    if (RecipeGate(recipe, BossGate) != null) continue;
 
                     var recipeResult = ResolveRecipe(recipe);
                     if (!recipeResult.Known)
